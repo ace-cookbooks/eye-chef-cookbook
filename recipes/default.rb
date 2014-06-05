@@ -18,8 +18,9 @@
 
 gem_package "bundler"
 
-gem_package "eye" do
-  version node['eye']['version']
+gem_package "ace-eye" do
+  #version node['eye']['version']
+  version '0.6.1'
 end
 
 %w(conf_dir run_dir log_dir).each do |dir|
