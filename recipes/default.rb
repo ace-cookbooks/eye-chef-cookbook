@@ -20,7 +20,7 @@ gem_package "bundler"
 
 gem_package "ace-eye" do
   #version node['eye']['version']
-  version '0.6.1'
+  version '0.6.2'
 end
 
 %w(conf_dir run_dir log_dir).each do |dir|
