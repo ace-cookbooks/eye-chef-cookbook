@@ -46,9 +46,11 @@ define :eye_app do
     cookbook params[:cookbook] || "eye"
     variables params[:variables] || params
     source params[:template] || "eye_conf.eye.erb"
+
+    # send safe_restart first
+    # It will only restart if eye already knows about this service
+    notifies :safe_restart, resources(:eye_service => params[:name]), :immediately
+    notifies :load, resources(:eye_service => params[:name]), :immediately
     notifies :enable, resources(:eye_service => params[:name]), :immediately
-    notifies :reload, resources(:eye_service => params[:name]), :immediately
-    notifies :restart, resources(:eye_service => params[:name]), :immediately
   end
-  
 end

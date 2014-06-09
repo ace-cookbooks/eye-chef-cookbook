@@ -21,8 +21,7 @@ require 'chef/mixin/language'
 include Chef::Mixin::ShellOut
 
 action :enable do
-  config_file = ::File.join(user_conf_dir,
-                            "#{new_resource.service_name}.eye")
+  config_file = config_file_path
 
   unless @current_resource.enabled
     template_suffix = case node['platform_family']
@@ -31,7 +30,7 @@ action :enable do
                       end
     cache_service_user = service_user
     cache_service_group = service_group
-    template "#{node['eye']['init_dir']}/#{new_resource.init_script_prefix}#{new_resource.service_name}" do
+    template init_script_path do
       source "eye_init.#{template_suffix}.erb"
       cookbook "eye"
       owner cache_service_user
@@ -54,31 +53,21 @@ action :enable do
 end
 
 action :load do
-  unless @current_resource.running
-    run_command(load_command)
-    new_resource.updated_by_last_action(true)
-  end
-end
-
-action :reload do
-  run_command(stop_command) if @current_resource.running
   run_command(load_command)
   new_resource.updated_by_last_action(true)
 end
 
 action :start do
-  unless @current_resource.running
-    run_command(start_command)
-    new_resource.updated_by_last_action(true)
-  end
+  run_command(start_command)
+  new_resource.updated_by_last_action(true)
 end
 
 action :disable do
   if @current_resource.enabled
-    file "#{user_conf_dir}/#{new_resource.service_name}.eye" do
+    file config_file_path do
       action :delete
     end
-    link "#{node['eye']['init_dir']}/#{new_resource.service_name}" do
+    link init_script_path do
       action :delete
     end
     new_resource.updated_by_last_action(true)
@@ -86,17 +75,18 @@ action :disable do
 end
 
 action :stop do
-  if @current_resource.running
-    run_command(stop_command)
-    new_resource.updated_by_last_action(true)
-  end
+  run_command(stop_command)
+  new_resource.updated_by_last_action(true)
 end
 
 action :restart do
-  if @current_resource.running
-    run_command(restart_command)
-    new_resource.updated_by_last_action(true)
-  end
+  run_command(restart_command)
+  new_resource.updated_by_last_action(true)
+end
+
+action :safe_restart do
+  run_command(restart_command, :dont_raise => true)
+  new_resource.updated_by_last_action(true)
 end
 
 def load_current_resource
@@ -115,7 +105,7 @@ def status_command
 end
 
 def load_command
-  "#{node['eye']['bin']} load #{user_conf_dir}/#{new_resource.service_name}.eye"
+  "#{node['eye']['bin']} load #{config_file_path}"
 end
 
 def load_eye
@@ -143,29 +133,14 @@ def run_command(command, opts = {})
 end
 
 def determine_current_status!
-  service_running?
+  # get sure eye master process is running
+  run_command(load_eye)
   service_enabled?
 end
 
-def service_running?
-  begin
-    # get sure eye master process is running
-    run_command(load_eye)
-
-    if run_command(status_command, { :dont_raise => true }).exitstatus > 0
-      @current_resource.running false
-    else
-      @current_resource.running true
-    end
-  rescue Mixlib::ShellOut::ShellCommandFailed, SystemCallError
-    @current_resource.running false
-    nil
-  end
-end
-
 def service_enabled?
-  if ::File.exists?("#{user_conf_dir}/#{new_resource.service_name}.eye") &&
-      ::File.exists?("#{node['eye']['init_dir']}/#{new_resource.init_script_prefix}#{new_resource.service_name}")
+  if ::File.exists?(config_file_path) &&
+      ::File.exists?(init_script_path)
     @current_resource.enabled true
   else
     @current_resource.enabled false
@@ -186,4 +161,12 @@ end
 
 def user_log_dir
   ::File.join(node['eye']['log_dir'], service_user)
+end
+
+def config_file_path
+  ::File.join(user_conf_dir, "#{new_resource.service_name}.eye")
+end
+
+def init_script_path
+  ::File.join(node['eye']['init_dir'], "#{new_resource.init_script_prefix}#{new_resource.service_name}")
 end
