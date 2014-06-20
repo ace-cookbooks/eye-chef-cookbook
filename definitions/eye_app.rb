@@ -1,9 +1,11 @@
 define :eye_app do
   include_recipe "eye::default"
-  
+
   service_user = params[:user_srv_uid] || node['eye']['user']
   service_group = params[:user_srv_gid] || node['eye']['group']
-  
+  config_template_source = params[:config_template_source] || node['eye']['config_template_source']
+  config_template_cookbook = params[:config_template_cookbook] || node['eye']['config_template_cookbook']
+
   eye_service params[:name] do
     supports [:start, :stop, :restart, :enable, :load, :reload]
     user_srv params[:user_srv]
@@ -31,13 +33,12 @@ define :eye_app do
   template "#{node["eye"]["conf_dir"]}/#{service_user}/config.rb" do
     owner service_user
     group node['eye']['group']
-    source "config.rb.erb"
+    source config_template_source
+    cookbook config_template_cookbook
     variables :log_file => "#{log_dir}/eye.log"
-    cookbook 'eye'
     action :create
     mode 0640
   end
-
 
   template "#{node["eye"]["conf_dir"]}/#{service_user}/#{params[:name]}.eye" do
     owner service_user
