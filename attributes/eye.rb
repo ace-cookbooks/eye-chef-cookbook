@@ -24,6 +24,8 @@ default['eye']['log_dir'] = '/var/log/eye'
 default['eye']['run_dir'] = '/var/run/eye'
 default['eye']['user'] = 'root'
 default['eye']['group'] = 'root'
+default['eye']['config_template_source'] = 'config.rb.erb'
+default['eye']['config_template_cookbook'] = 'eye'
 
 case platform
 when 'arch'
