@@ -50,8 +50,8 @@ define :eye_app do
     action [:load, :enable, :start]
   end
 
-  node['eye']['apps'][params[:name]] ||= {}
-  node['eye']['apps'][params[:name]]['firstrun'] = node['eye']['firstrun']
+  node.set['eye']['apps'][params[:name]] ||= {}
+  node.set['eye']['apps'][params[:name]]['firstrun'] ||= node['eye']['firstrun']
 
   ruby_block "restart eye_service[#{params[:name]} except on first run" do
     block do
