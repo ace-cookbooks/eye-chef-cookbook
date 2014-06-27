@@ -5,15 +5,7 @@ define :eye_app do
   service_group = params[:user_srv_gid] || node['eye']['group']
   config_template_source = params[:config_template_source] || node['eye']['config_template_source']
   config_template_cookbook = params[:config_template_cookbook] || node['eye']['config_template_cookbook']
-
-  eye_service params[:name] do
-    supports [:start, :stop, :restart, :enable, :load, :reload]
-    user_srv params[:user_srv]
-    user_srv_uid service_user
-    user_srv_gid service_group
-    init_script_prefix params[:init_script_prefix] || ''
-    action :nothing
-  end
+  restart_timing = params[:restart_timing] || :delayed
 
   directory "#{node["eye"]["conf_dir"]}/#{service_user}" do
     owner service_user
@@ -40,18 +32,32 @@ define :eye_app do
     mode 0640
   end
 
-  template "#{node["eye"]["conf_dir"]}/#{service_user}/#{params[:name]}.eye" do
+  app_config_resource = template "#{node["eye"]["conf_dir"]}/#{service_user}/#{params[:name]}.eye" do
     owner service_user
     group service_group
     mode 0640
     cookbook params[:cookbook] || "eye"
     variables params[:variables] || params
     source params[:template] || "eye_conf.eye.erb"
+  end
 
-    # send safe_restart first
-    # It will only restart if eye already knows about this service
-    notifies :safe_restart, resources(:eye_service => params[:name]), :immediately
-    notifies :load, resources(:eye_service => params[:name]), :immediately
-    notifies :enable, resources(:eye_service => params[:name]), :immediately
+  eye_service params[:name] do
+    supports [:start, :stop, :restart, :safe_restart, :enable, :load]
+    user_srv params[:user_srv]
+    user_srv_uid service_user
+    user_srv_gid service_group
+    init_script_prefix params[:init_script_prefix] || ''
+    action [:load, :enable, :start]
+  end
+
+  node['eye']['apps'][params[:name]] ||= {}
+  node['eye']['apps'][params[:name]]['firstrun'] = node['eye']['firstrun']
+
+  ruby_block "restart eye_service[#{params[:name]} except on first run" do
+    block do
+      node.set['eye']['apps'][params[:name]]['firstrun'] = false
+    end
+    notifies :restart, "eye_service[#{params[:name]}]", restart_timing
+    only_if { app_config_resource.updated_by_last_action? && node['eye']['apps'][params[:name]]['firstrun'] != true }
   end
 end

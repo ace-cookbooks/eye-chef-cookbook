@@ -34,3 +34,5 @@ else
   default['eye']['init_dir'] = '/etc/init.d'
 end
 
+default['eye']['firstrun'] = true
+default['eye']['apps'] = {}

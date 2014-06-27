@@ -17,13 +17,13 @@
 # limitations under the License.
 #
 
-actions :start, :stop, :enable, :disable, :load, :restart, :reload
+actions :start, :stop, :enable, :disable, :load, :restart, :safe_restart
 default_action :start
 
 attribute :service_name, :name_attribute => true
 attribute :enabled, :default => false
 attribute :variables, :kind_of => Hash
-attribute :supports, :default => { :restart => true, :status => true }
+attribute :supports, :default => { :restart => true, :status => false }
 attribute :user_srv, :kind_of => [TrueClass, FalseClass], :default => false
 attribute :user_srv_uid, :kind_of => [NilClass, String], :default => nil
 attribute :user_srv_gid, :kind_of => [NilClass, String], :default => nil

@@ -100,10 +100,6 @@ end
 
 protected
 
-def status_command
-  "#{node['eye']['bin']} info #{new_resource.service_name}"
-end
-
 def load_command
   "#{node['eye']['bin']} load #{config_file_path}"
 end
