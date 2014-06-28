@@ -50,11 +50,15 @@ define :eye_app do
     action [:load, :enable, :start]
   end
 
+  Chef::Log.info("eye firstrun: #{node['eye']['firstrun']}")
+  Chef::Log.info("eye #{params[:name]} firstrun: #{node['eye']['apps'][params[:name]]['firstrun']}") rescue nil
   node.set['eye']['apps'][params[:name]] ||= {}
   node.set['eye']['apps'][params[:name]]['firstrun'] ||= node['eye']['firstrun']
+  Chef::Log.info("eye #{params[:name]} firstrun: #{node['eye']['apps'][params[:name]]['firstrun']}")
 
   ruby_block "restart eye_service[#{params[:name]} except on first run" do
     block do
+      Chef::Log.info("setting eye apps #{params[:name]} firstrun to false")
       node.set['eye']['apps'][params[:name]]['firstrun'] = false
     end
     notifies :restart, "eye_service[#{params[:name]}]", restart_timing
