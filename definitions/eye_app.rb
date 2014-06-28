@@ -51,7 +51,8 @@ define :eye_app do
   end
 
   Chef::Log.info("eye firstrun: #{node['eye']['firstrun']}")
-  Chef::Log.info("eye #{params[:name]} firstrun: #{node['eye']['apps'][params[:name]]['firstrun']}") rescue nil
+  Chef::Log.info("eye #{params[:name]} firstrun before: #{node['eye']['apps'][params[:name]]['firstrun']}") rescue nil
+  node.set['eye']['apps'][params[:name]] = {} unless node['eye']['apps'].attribute?(params[:name])
   node.set['eye']['apps'][params[:name]]['firstrun'] = node['eye']['firstrun'] unless node['eye']['apps'][params[:name]].attribute?('firstrun')
   Chef::Log.info("eye #{params[:name]} firstrun: #{node['eye']['apps'][params[:name]]['firstrun']}")
 
