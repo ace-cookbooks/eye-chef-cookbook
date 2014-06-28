@@ -52,8 +52,7 @@ define :eye_app do
 
   Chef::Log.info("eye firstrun: #{node['eye']['firstrun']}")
   Chef::Log.info("eye #{params[:name]} firstrun: #{node['eye']['apps'][params[:name]]['firstrun']}") rescue nil
-  node.set['eye']['apps'][params[:name]] ||= {}
-  node.set['eye']['apps'][params[:name]]['firstrun'] ||= node['eye']['firstrun']
+  node.set['eye']['apps'][params[:name]]['firstrun'] = node['eye']['firstrun'] unless node['eye']['apps'][params[:name]].attribute?('firstrun')
   Chef::Log.info("eye #{params[:name]} firstrun: #{node['eye']['apps'][params[:name]]['firstrun']}")
 
   ruby_block "restart eye_service[#{params[:name]} except on first run" do
