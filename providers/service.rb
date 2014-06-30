@@ -79,6 +79,11 @@ action :stop do
   new_resource.updated_by_last_action(true)
 end
 
+action :safe_stop do
+  run_command(stop_command, :dont_raise => true)
+  new_resource.updated_by_last_action(true)
+end
+
 action :restart do
   run_command(restart_command)
   new_resource.updated_by_last_action(true)

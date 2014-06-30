@@ -42,7 +42,7 @@ define :eye_app do
   end
 
   eye_service params[:name] do
-    supports [:start, :stop, :restart, :safe_restart, :enable, :load]
+    supports [:start, :stop, :safe_stop, :restart, :safe_restart, :enable, :load]
     user_srv params[:user_srv]
     user_srv_uid service_user
     user_srv_gid service_group
